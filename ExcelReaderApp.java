@@ -314,6 +314,7 @@ public class ExcelReaderApp {
 			Workbook workbook = WorkbookFactory.create(inputStream);
 			Sheet sheet = workbook.getSheetAt(0);
 			// Reset the column order to the original order
+			try {
 			for (int i = 0; i < model.getColumnCount(); i++) {
 			    int currentColumnIndex = table.convertColumnIndexToView(i);
 			    int desiredColumnIndex = originalColumnOrder[i];
@@ -321,9 +322,12 @@ public class ExcelReaderApp {
 			        table.moveColumn(currentColumnIndex, desiredColumnIndex);
 			    }
 			}
+			}catch(Exception e) {
+				
+			}
 			for (int rowIndex = 1; rowIndex <= model.getRowCount(); rowIndex++) {
 				Row dataRow = sheet.createRow(rowIndex);
-				for (int columnIndex = 0; columnIndex < model.getColumnCount(); columnIndex++) {
+				for (int columnIndex = 0; columnIndex < model.getColumnCount()-1; columnIndex++) {
 					Cell cell = dataRow.createCell(columnIndex);
 					cell.setCellValue(table.getValueAt(rowIndex - 1, columnIndex).toString());
 				}
