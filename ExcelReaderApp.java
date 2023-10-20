@@ -67,7 +67,7 @@ public class ExcelReaderApp {
 	MouseInputAdapter mouseAdapter = null;
 	int lastClickedRow = -1;
 	int lastClickedColumn = -1;
-
+	int[] originalColumnOrder = null;
 	public ExcelReaderApp() {
 		frame = new JFrame("Release PJM - Automation Initiative Tools");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -150,6 +150,17 @@ public class ExcelReaderApp {
 				save();
 			}
 		});
+		saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Clear the JTextField
+            	searchField.setText("");
+                
+                // Programmatically click the original JButton
+            	searchButton.doClick();
+            	table.resetKeyboardActions();
+            }
+        });
 		saveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -241,7 +252,13 @@ public class ExcelReaderApp {
 		}
 		frame.setTitle("Release PJM - Automation Initiative Tools");
 		frame.setTitle(frame.getTitle() + "       " + filePath);
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
 
+		// Get the original order of columns as an array
+		originalColumnOrder = new int[model.getColumnCount()];
+		for (int i = 0; i < model.getColumnCount(); i++) {
+		    originalColumnOrder[i] = i;
+		}
 		// saveToSharePointButton.addMouseListener(mouseAdapter);
 		return newModel;
 	}
@@ -291,13 +308,19 @@ public class ExcelReaderApp {
 	private void writeExcel() throws Exception {
 		createFreshSheet();
 	}
-
 	private void createFreshSheet() throws Exception {
 		try {
 			FileInputStream inputStream = new FileInputStream(new File(filePath));
 			Workbook workbook = WorkbookFactory.create(inputStream);
 			Sheet sheet = workbook.getSheetAt(0);
-
+			// Reset the column order to the original order
+			for (int i = 0; i < model.getColumnCount(); i++) {
+			    int currentColumnIndex = table.convertColumnIndexToView(i);
+			    int desiredColumnIndex = originalColumnOrder[i];
+			    if (currentColumnIndex != desiredColumnIndex) {
+			        table.moveColumn(currentColumnIndex, desiredColumnIndex);
+			    }
+			}
 			for (int rowIndex = 1; rowIndex <= model.getRowCount(); rowIndex++) {
 				Row dataRow = sheet.createRow(rowIndex);
 				for (int columnIndex = 0; columnIndex < model.getColumnCount(); columnIndex++) {
