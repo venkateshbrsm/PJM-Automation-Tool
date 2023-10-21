@@ -73,4 +73,72 @@ public class JiraToExcel {
             iterateOverJson(arrayElement, path + "[" + i + "]");
         }
     }
+        public static void main(String[] args) {
+    // ... (previous code)
+
+    if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try (InputStream in = connection.getInputStream()) {
+            JsonNode jsonNode = objectMapper.readTree(in);
+            
+            List<String> selectedKeys = new ArrayList<>();
+            selectedKeys.add("key");
+            selectedKeys.add("fields.summary");
+
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            XSSFSheet sheet = workbook.createSheet("Jira Data");
+
+            int rowNum = 0;
+            XSSFRow headerRow = sheet.createRow(rowNum);
+            for (int i = 0; i < selectedKeys.size(); i++) {
+                String key = selectedKeys.get(i);
+                XSSFCell cell = headerRow.createCell(i);
+                cell.setCellValue(key);
+            }
+
+            rowNum++;
+
+            iterateOverJsonAndWriteToExcel(jsonNode, selectedKeys, sheet, rowNum);
+
+            // Save the Excel file
+            FileOutputStream fileOut = new FileOutputStream("output.xlsx");
+            workbook.write(fileOut);
+            fileOut.close();
+            workbook.close();
+
+            System.out.println("Data has been successfully written to the Excel file.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    } else {
+        // Handle the error
+    }
+}
+
+private static void iterateOverJsonAndWriteToExcel(JsonNode node, List<String> selectedKeys, XSSFSheet sheet, int rowNum) {
+    if (node.isObject()) {
+        XSSFRow row = sheet.createRow(rowNum);
+
+        for (int i = 0; i < selectedKeys.size(); i++) {
+            String key = selectedKeys.get(i);
+            JsonNode value = node.at(key);
+
+            XSSFCell cell = row.createCell(i);
+            cell.setCellValue(value.isValueNode() ? value.asText() : value.toString());
+        }
+
+        rowNum++;
+
+        node.fields().forEachRemaining(entry -> {
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+            iterateOverJsonAndWriteToExcel(value, selectedKeys, sheet, rowNum);
+        });
+    } else if (node.isArray()) {
+        for (int i = 0; i < node.size(); i++) {
+            JsonNode arrayElement = node.get(i);
+            iterateOverJsonAndWriteToExcel(arrayElement, selectedKeys, sheet, rowNum);
+        }
+    }
+}
 }
