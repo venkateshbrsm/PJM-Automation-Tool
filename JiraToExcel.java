@@ -46,8 +46,31 @@ public class JiraToExcel {
             outputStream.close();
 
             System.out.println("Excel file created successfully.");
+
+
+            
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    private static void iterateOverJson(JsonNode node, String path) {
+    if (node.isObject()) {
+        node.fields().forEachRemaining(entry -> {
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+            String newPath = path.isEmpty() ? key : path + "." + key;
+
+            System.out.println("Key: " + newPath);
+            if (value.isObject() || value.isArray()) {
+                iterateOverJson(value, newPath);
+            } else {
+                System.out.println("Value: " + value);
+            }
+        });
+    } else if (node.isArray()) {
+        for (int i = 0; i < node.size(); i++) {
+            JsonNode arrayElement = node.get(i);
+            iterateOverJson(arrayElement, path + "[" + i + "]");
         }
     }
 }
