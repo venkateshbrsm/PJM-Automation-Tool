@@ -141,4 +141,30 @@ private static void iterateOverJsonAndWriteToExcel(JsonNode node, List<String> s
         }
     }
 }
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("People Data");
+
+            // Create the header row
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("Name");
+            headerRow.createCell(1).setCellValue("Age");
+            headerRow.createCell(2).setCellValue("Email");
+
+            // Write data from the list of POJOs to the Excel sheet
+            int rowNum = 1;
+            for (Person person : people) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(person.getName());
+                row.createCell(1).setCellValue(person.getAge());
+                row.createCell(2).setCellValue(person.getEmail());
+            }
+
+            // Save the Excel file
+            try (FileOutputStream outputStream = new FileOutputStream("people.xlsx")) {
+                workbook.write(outputStream);
+            }
+            System.out.println("Excel file created successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 }
